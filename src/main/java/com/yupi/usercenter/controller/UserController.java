@@ -56,7 +56,6 @@ public class UserController {
             log.warn("对象为空");
             return null;
         }
-        System.out.println(userLoginRequest);
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
@@ -64,6 +63,20 @@ public class UserController {
             return null;
         }
         return userService.userLogin(userAccount, userPassword, request);
+    }
+
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User)userObj;
+        if (currentUser == null) {
+            return null;
+        }
+        long userId = currentUser.getId();
+        User user = userService.getById(userId);
+
+        // TODO 校验用户是否合法
+        return userService.getSafeyUser(user);
     }
 
     @GetMapping("/search")
