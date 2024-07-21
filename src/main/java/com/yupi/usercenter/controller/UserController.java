@@ -1,6 +1,8 @@
 package com.yupi.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.yupi.usercenter.common.BaseResponse;
+import com.yupi.usercenter.common.ResultUtils;
 import com.yupi.usercenter.model.domain.User;
 import com.yupi.usercenter.model.domain.request.UserLoginRequest;
 import com.yupi.usercenter.model.domain.request.UserRegisterRequest;
@@ -32,7 +34,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
             log.warn("对象为空");
             return null;
@@ -47,11 +49,12 @@ public class UserController {
             return null;
         }
 
-        return userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        return ResultUtils.success(result);
     }
 
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
             log.warn("对象为空");
             return null;
@@ -62,23 +65,26 @@ public class UserController {
             log.warn("参数不全");
             return null;
         }
-        return userService.userLogin(userAccount, userPassword, request);
+
+        User user = userService.userLogin(userAccount, userPassword, request);
+        return ResultUtils.success(user);
     }
 
     @PostMapping("/logout")
-    public Integer userLogout(@RequestBody HttpServletRequest request) {
+    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if (request == null) {
             log.warn("对象为空");
             return null;
         }
 
-        return userService.userLogout(request);
+        Integer result = userService.userLogout(request);
+        return ResultUtils.success(result);
     }
 
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User)userObj;
+        User currentUser = (User) userObj;
         if (currentUser == null) {
             return null;
         }
@@ -86,37 +92,40 @@ public class UserController {
         User user = userService.getById(userId);
 
         // TODO 校验用户是否合法
-        return userService.getSafeyUser(user);
+        User result = userService.getSafeyUser(user);
+        return ResultUtils.success(result);
     }
 
     @GetMapping("/search")
-    public List<User> searchUser(String username, HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUser(String username, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return new ArrayList<>();
+            return ResultUtils.fail(new ArrayList<>());
         }
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        if(StringUtils.isNotBlank(username)) {
+        if (StringUtils.isNotBlank(username)) {
             queryWrapper.like("username", username);
         }
 
         List<User> userList = userService.list(queryWrapper);
-        return userList.stream().map(user -> userService.getSafeyUser(user)).collect(Collectors.toList());
+        List<User> result = userList.stream().map(user -> userService.getSafeyUser(user)).collect(Collectors.toList());
+        return ResultUtils.success(result);
     }
 
     @PostMapping("/delete/{id}")
-    public boolean deleteUser(@PathVariable long id, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteUser(@PathVariable long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return false;
+            return ResultUtils.fail(false);
         }
 
         System.out.println(id);
 
         if (id <= 0) {
-            return false;
+            return ResultUtils.fail(false);
         }
 
-        return userService.removeById(id);
+        boolean result = userService.removeById(id);
+        return ResultUtils.fail(result);
     }
 
     /**
