@@ -13,7 +13,7 @@ public class ResultUtils {
     }
 
 
-    public static <T> BaseResponse<T> fail(T data) {
-        return new BaseResponse<>(0, data, "no");
+    public static <T> BaseResponse<T> error(ErrorCode errorCode) {
+        return new BaseResponse<>(errorCode);
     }
 }

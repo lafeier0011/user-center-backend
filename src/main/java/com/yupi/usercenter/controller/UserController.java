@@ -2,7 +2,9 @@ package com.yupi.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yupi.usercenter.common.BaseResponse;
+import com.yupi.usercenter.common.ErrorCode;
 import com.yupi.usercenter.common.ResultUtils;
+import com.yupi.usercenter.exception.BusinessException;
 import com.yupi.usercenter.model.domain.User;
 import com.yupi.usercenter.model.domain.request.UserLoginRequest;
 import com.yupi.usercenter.model.domain.request.UserRegisterRequest;
@@ -36,8 +38,7 @@ public class UserController {
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
-            log.warn("对象为空");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
@@ -99,7 +100,7 @@ public class UserController {
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUser(String username, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResultUtils.fail(new ArrayList<>());
+            return ResultUtils.error(ErrorCode.NULL_ERROR);
         }
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -115,17 +116,17 @@ public class UserController {
     @PostMapping("/delete/{id}")
     public BaseResponse<Boolean> deleteUser(@PathVariable long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResultUtils.fail(false);
+            return ResultUtils.error(ErrorCode.NO_AUTH);
         }
 
         System.out.println(id);
 
         if (id <= 0) {
-            return ResultUtils.fail(false);
+            return ResultUtils.error(ErrorCode.NO_AUTH);
         }
 
         boolean result = userService.removeById(id);
-        return ResultUtils.fail(result);
+        return ResultUtils.success(result);
     }
 
     /**
