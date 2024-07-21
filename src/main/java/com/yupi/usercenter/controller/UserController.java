@@ -96,7 +96,9 @@ public class UserController {
         }
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.like("username", username);
+        if(StringUtils.isNotBlank(username)) {
+            queryWrapper.like("username", username);
+        }
 
         List<User> userList = userService.list(queryWrapper);
         return userList.stream().map(user -> userService.getSafeyUser(user)).collect(Collectors.toList());
